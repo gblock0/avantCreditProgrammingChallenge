@@ -1,0 +1,2 @@
+- You can not have a credit limit less than or equal to 0 #30
+- You can not have an APR less than or equal to 0 #49
