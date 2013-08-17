@@ -26,9 +26,7 @@ class CreditLine
     if @transactions == nil
       @transactions = Hash.new
     end
-    day = Hash.new
-    day = {day_number: day_of_transaction, amount: -amount_to_withdraw}
-    @transactions[@transactions.length] = day
+    @transactions[day_of_transaction] = -amount_to_withdraw
 
   end
 
@@ -145,7 +143,7 @@ while !end_simulation do
       credit_line.withdraw_money(amount_to_withdraw.to_f, day_of_withdrawl.to_i + (month_number * 30))
        
      for transaction in credit_line.transactions 
-        puts "trans stuff: #{transaction.day_number}"
+        puts "trans stuff: #{credit_line.transactions[transaction]}"
       end
     when 2
     when 3
