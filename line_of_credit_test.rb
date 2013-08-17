@@ -1,7 +1,8 @@
+require 'pry'
+
 class CreditLine
   @@PAY_PERIOD = 30
-  attr_accessor :apr, :credit_limit, :balance, :total_interest, :transactions
-  @balance = 0
+  attr_accessor :apr, :credit_limit, :balance, :transactions, :month_hash, :previous_month_balance
 
   def withdraw_money(amount_to_withdraw, day_of_transaction)
     if @balance == nil
@@ -24,11 +25,44 @@ class CreditLine
     end while !correct_amount_entered
     
     if @transactions == nil
-      @transactions = Hash.new
+      @transactions = Array.new
     end
-    @transactions[day_of_transaction] = -amount_to_withdraw
+    new_transaction = {day_of_transaction => -amount_to_withdraw}
+    @transactions.push(new_transaction)
 
   end
+
+  def calc_interest(month_number)
+    if @month_hash == nil
+      @month_hash = Hash.new
+    end
+    @month_hash[month_number] = @transactions
+
+    if @previous_month_balance == nil
+      @previous_month_balance = 0
+    end
+    temp_balance = @previous_month_balance
+    interest = 0
+    number_of_days = 0
+    @transactions.each_with_index do |transaction, index|
+      transaction_key = transaction.keys[0]
+
+      if index != 0
+        interest += temp_balance * @apr / 365 * transaction_key
+      end
+      if @transactions[index + 1] != nil
+        number_of_days = @transactions[index+1][0] - transaction_key
+      else
+        number_of_days = 30 - transaction_key 
+      end
+      temp_balance += -transaction[transaction_key]
+      interest += temp_balance * @apr / 365 * number_of_days
+    end
+    @balance += interest
+    @previous_month_balance = balance
+    @transactions = Array.new
+  end
+
 
 end
 
@@ -37,8 +71,32 @@ def valid_number?(number)
   number =~ regex_number_check
 end
 
+def get_day_of_month(credit_line)
+  puts "What day of the month is it? (Assume there are 30 days in a month)"
+  correct_number_entered = false
+  day_of_withdrawl = 0
+  begin
+    day_of_withdrawl = gets.chomp
+    if valid_number?(day_of_withdrawl) && day_of_withdrawl.to_i >= 1 && day_of_withdrawl.to_i <= 30
+      correct_number_entered = true
+    else
+      puts "That is not a number between 1 and 30. Please try again"
+    end
+  end while !correct_number_entered
+
+  if day_of_withdrawl.to_i < @@day_number
+    credit_line.calc_interest(@@month_number)
+    @@month_number += 1
+  end
+  @@day_number = day_of_withdrawl.to_i
+end
+
+####Main Program###
+
 number_check = nil
 correct_number = false
+@@month_number = 0
+@@day_number = 1
 
 puts "What do you want to be the original line of credit?"
 
@@ -93,10 +151,8 @@ credit_line.credit_limit = orig_credit_limit.to_f
 credit_line.apr = orig_apr
 
 end_simulation = false
-month_number = 1
-day_number = 1
 while !end_simulation do
-  puts "Month #{month_number}, Day #{day_number}:"
+  puts "Month #{@@month_number + 1}, Day #{@@day_number}:"
   puts "What would you like to do?"
   puts "1. Withdraw Money"
   puts "2. Make Payment"
@@ -115,22 +171,8 @@ while !end_simulation do
     
     case number_picked
     when 1
-      puts "What day of the month is it? (Assume there are 30 days in a month)"
-      correct_number_entered = false
-      begin
-        day_of_withdrawl = gets.chomp
-        if valid_number?(day_of_withdrawl) && day_of_withdrawl.to_i >= 1 && day_of_withdrawl.to_i <= 30
-          correct_number_entered = true
-        else
-          puts "That is not a number between 1 and 30. Please try again"
-          day_of_withdrawl = gets.chomp
-        end
-      end while !correct_number_entered
 
-      if day_of_withdrawl.to_i < day_number
-        month_number += 1
-      end
-      day_number = day_of_withdrawl.to_i
+      day_of_withdrawl = get_day_of_month(credit_line)
 
       puts "How much would you like to withdraw?"
       correct_number_enetred = false
@@ -140,14 +182,28 @@ while !end_simulation do
           correct_number_enetred = true
         end
       end while !correct_number_enetred
-      credit_line.withdraw_money(amount_to_withdraw.to_f, day_of_withdrawl.to_i + (month_number * 30))
-       
-     for transaction in credit_line.transactions 
-        puts "trans stuff: #{credit_line.transactions[transaction]}"
-      end
+      credit_line.withdraw_money(amount_to_withdraw.to_f, day_of_withdrawl.to_i)
     when 2
+      payment_day = get_day_of_month(credit_line)
+
+      puts "How much would you like to pay?"
+      correct_number_enetred = false
+      begin
+        payment_amount = gets.chomp
+        if valid_number?(payment_amount)
+          correct_number_enetred = true
+        end
+      end while !correct_number_enetred
+      credit_line.make_payment(payment_amount)
+
     when 3
       end_simulation = true
     end
+  end
+
+  @@day_number += 1
+  if @@day_number > 30
+    @@day_number = 1
+    @@month_number += 1
   end
 end
