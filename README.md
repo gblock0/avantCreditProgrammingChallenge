@@ -2,6 +2,8 @@ This is my solution to AvantCredit's Line of Credit Test
 
 Here is the prompt:
 
+---
+
 Create a ruby implementation of the following:
 
 A line of credit product.  This is like a credit card except theres no card.
