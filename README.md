@@ -1,8 +1,6 @@
 This is my solution to AvantCredit's Line of Credit Test
 
-Here is the prompt:
-
----
+***
 
 Create a ruby implementation of the following:
 
