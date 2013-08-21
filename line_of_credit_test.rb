@@ -36,7 +36,13 @@ class CreditLine
       @transactions = Array.new
     end
 
-    @balance -= payment_amount
+    if payment_amount > @balance
+      @credit_limit += (payment_amount - @balance)
+      @balance = 0
+    else
+      @balance -= payment_amount
+    end
+
     puts "Your new balance is: $#{@balance}"
 
     new_transaction = {day_of_transaction => payment_amount}
@@ -74,6 +80,7 @@ class CreditLine
     end
     @total_interest += interest
     @balance += interest
+    @balance = @balance.round(2)
     @previous_month_balance = balance
     @transactions = Array.new
   end
